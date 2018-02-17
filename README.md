@@ -8,7 +8,7 @@
 (ユーザ数)次元のnumpy配列．各要素は各ユーザが興味を示したコンテンツのタイトルで，形式はnumpy配列．コンテンツごとにテキストを区切って配列にすることで，異なるコンテンツを跨いだ単語の時系列性を学習してしまうことを防ぐ．
 ## CNN_textクラスの説明
 ### 引数
-tagger:形態素解析器のtagger
-model:学習済みword2vecモデル
-filter_sizes:CNNで時系列性を考慮する単語数
-n_epochs:エポック数
+tagger:形態素解析器のtagger   
+model:学習済みword2vecモデル   
+filter_sizes:CNNで時系列性を考慮する単語数   
+n_epochs:エポック数   
