@@ -8,7 +8,15 @@
 (ユーザ数)次元のnumpy配列．各要素は各ユーザが興味を示したコンテンツのタイトルで，形式はnumpy配列．コンテンツごとにテキストを区切って配列にすることで，異なるコンテンツを跨いだ単語の時系列性を学習してしまうことを防ぐ．
 ## CNN_textクラスの説明
 ### 引数
-tagger:形態素解析器のtagger   
-model:学習済みword2vecモデル   
-filter_sizes:CNNで時系列性を考慮する単語数   
-n_epochs:エポック数   
+tagger : 形態素解析器のtagger   
+model : 学習済みword2vecモデル   
+filter_sizes : CNNで時系列性を考慮する単語数   
+n_epochs : エポック数   
+### メソッド
+#### fit(labels,texts)
+上記のlabels,textsを引数にとり，CNNの学習とテストを行うことでCNN_text.Resultsを更新していく．全エポックが終了する前に打ち切った場合は，そこまでの結果がCNN_text.Resultsに保存されている．
+### 結果の保存
+#### 誤差，正解率，コンフュージョンマトリクス
+CNN_text.Resultsに，訓練データを用いて学習したモデルをテストデータに用いた場合の結果をエポックごとに記録している．形式はpandas.DataFrame．
+#### 最も性能の良いモデル
+'model/Best_model.ckpt'に，最も誤差の小さかったモデルの情報が保存されている．saver.restore()で復元可能．
