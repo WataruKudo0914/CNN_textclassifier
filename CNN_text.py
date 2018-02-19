@@ -144,7 +144,7 @@ class CNN(object):
         grads_and_vars = optimizer.compute_gradients(cnn.loss)
         train_op = optimizer.apply_gradients(grads_and_vars, global_step=global_step)
 
-        n_epochs = 100
+        
         batch_size = 400
         n_batches = len(train_MatList) // batch_size
         
