@@ -147,6 +147,18 @@ class CNN(object):
                     )
         self.cnn = cnn
         
+        # cnnクラスの引数を辞書にして保存
+        arg_dic = {'sequence_length':maxlen,
+               'num_classes':train_y.shape[1],
+               'embedding_size':model.vector_size,
+              'filter_sizes':filter_sizes,
+              'num_filters':128,
+              'l2_reg_lambda':0.0}
+        with open('model/arg_dic.pickle','wb') as f:
+            pickle.dump(arg_dic,f)
+        
+
+        
         # Define Training procedure
         global_step = tf.Variable(0, name="global_step", trainable=False)
         optimizer = tf.train.AdamOptimizer(1e-3)
