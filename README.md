@@ -31,8 +31,8 @@ n_epochs : エポック数
 ### メソッド
 #### fit(labels,texts)
 上記のlabels,textsを引数にとり，CNNの学習とテストを行うことでCNN_text.Resultsを更新していく．全エポックが終了する前に打ち切った場合は，そこまでの結果がCNN_text.Resultsに保存されている．
-#### predict(texts,sess)
-上記のtextsと復元したSessionを引数にとり，各ユーザに対する推定ラベルと推定所属確率を返す．
+#### predict(texts)
+上記のtextsを引数にとり，各ユーザに対する推定ラベルと推定所属確率を返す．fitメソッドの後に用いることで，学習時に最もlossが小さかったモデルを用いて推定する．   
 戻り値1 : (ユーザ数)次元のnumpy配列．
 戻り値2 : (ユーザ数,クラス数)のshapeを持ったnumpyの2次元配列．
 戻り値は (戻り値1,戻り値2)のタプル
