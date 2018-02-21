@@ -34,6 +34,9 @@ class CNN(object):
         self.padding_num = max(filter_sizes) - 1
         self.n_epochs = n_epochs
         self.Results = pd.DataFrame(index=range(n_epochs),columns=['loss','Accuracy','confusion_matrix'])
+        self.maxlen = 0
+        self.n_classes = 0
+        self.cnn = None
         
         
     def _tokenize(self,text): #形態素解析
@@ -105,7 +108,7 @@ class CNN(object):
         mat_list = np.array([text2matrix(text) for text in texts])
         # maxlen (最大行数)を調べる．
         maxlen = max([mat.shape[0] for mat in mat_list])
-        
+        self.maxlen = maxlen
         
         # 訓練データとテストデータに分ける．
         num_index = int(train_rate * len(onehot_datalabels))
@@ -113,18 +116,22 @@ class CNN(object):
         unlabeled_index = list(set(range(len(onehot_datalabels)))-index)
         labeled_index = list(index)
         
-        train_MatList = mat_list[labeled_index] # トレーニングデータは後でパディング（メモリ節約） 
+        train_MatList = mat_list[labeled_index]
         test_MatList = mat_list[unlabeled_index]
-        test_X = mat2data(test_MatList,maxlen) # テストデータに関しては先にパディング（時間節約）
+        
         
         train_y = onehot_datalabels[labeled_index]
         test_y = onehot_datalabels[unlabeled_index]
         
-        return [train_MatList, test_X, train_y, test_y, maxlen]
+        return [train_MatList, test_MatList, train_y, test_y, maxlen]
         
     def fit(self,labels,texts,train_rate=0.8):
         make_input, model, mat2data, filter_sizes, n_epochs = self.make_input, self.model, self.mat2data, self.filter_sizes, self.n_epochs
-        train_MatList, test_X, train_y, test_y, maxlen = make_input(labels,texts,train_rate)
+        train_MatList, test_MatList, train_y, test_y, maxlen = make_input(labels,texts,train_rate)
+        maxlen = self.maxlen
+        
+        n_classes = len(np.unique(labels))
+        self.n_classes = n_classes
         
         rng = np.random.RandomState(1234)
         random_state = 42
@@ -137,6 +144,7 @@ class CNN(object):
                     num_filters=128,
                     l2_reg_lambda=0.0
                     )
+        self.cnn = cnn
         
         # Define Training procedure
         global_step = tf.Variable(0, name="global_step", trainable=False)
@@ -181,14 +189,43 @@ class CNN(object):
                         [train_op, global_step,  cnn.loss, cnn.accuracy],
                         feed_dict)
             
-            feed_dict = {
-                cnn.input_x: test_X,
-                cnn.input_y: test_y,
-                cnn.dropout_keep_prob: 1.0,
-                }
-            step, loss, accuracy, confusion_matrix = sess.run(
-                        [global_step, cnn.loss, cnn.accuracy, cnn.confusion_matrix],
-                        feed_dict)
+            del x_batch
+                
+            #テストもバッチ処理(メモリの関係)
+            test_MatList, test_y = shuffle(test_MatList, test_y, random_state=random_state)
+            test_Num = len(test_MatList)
+            t_batch_size = 1000
+            t_batches = test_Num // t_batch_size
+            losses = []
+            Accuracies = []
+            Matrix = np.zeros((n_classes,n_classes))
+            
+            for j in range(t_batches):
+                t_start = j * t_batch_size
+                t_end = t_start + t_batch_size
+                
+                test_MatList_batch = test_MatList[t_start:t_end]
+                test_X_batch = mat2data(test_MatList_batch,maxlen)
+                test_y_batch = test_y[t_start:t_end]
+
+                feed_dict = {
+                    cnn.input_x: test_X_batch,
+                    cnn.input_y: test_y_batch,
+                    cnn.dropout_keep_prob: 1.0,
+                    }
+                step, loss_batch, accuracy_batch, confusion_matrix_batch = sess.run(
+                            [global_step, cnn.loss, cnn.accuracy, cnn.confusion_matrix],
+                            feed_dict)
+                
+                losses.append(loss_batch)
+                Accuracies.append(accuracy_batch)
+                Matrix += confusion_matrix_batch
+           
+            
+            loss = np.average(losses)
+            accuracy = np.average(Accuracies)
+            confusion_matrix = Matrix
+                
             
 
             print(" epoch {}, loss {:g}, acc {:g}".format( step, loss, accuracy))
@@ -201,6 +238,31 @@ class CNN(object):
                 # 最もlossが小さかったモデルは一時ファイルに保存されている．
         
         return None
+    
+    def predict(self,texts,sess):
+        text2matrix, mat2data, maxlen, n_classes, model = self.text2matrix, self.mat2data, self.maxlen, self.n_classes, self.model
+        cnn = self.cnn
+        
+        
+        #文章ごとの行列を格納した配列
+        mat_list = np.array([text2matrix(text) for text in texts])
+        input_X = mat2data(mat_list,maxlen)
+        input_Y = np.zeros((len(texts),n_classes))
+        
+        feed_dict = {
+            cnn.input_x: input_X,
+            cnn.input_y: input_Y,
+            cnn.dropout_keep_prob: 1.0,
+            }
+        
+        predictions, probabilities = sess.run(
+                [cnn.predictions, tf.nn.softmax(cnn.scores)],
+                feed_dict) 
+        
+        return predictions, probabilities
+        
+        
+        
                 
 
 
