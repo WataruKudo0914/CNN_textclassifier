@@ -31,6 +31,10 @@ n_epochs : エポック数
 ### メソッド
 #### fit(labels,texts)
 上記のlabels,textsを引数にとり，CNNの学習とテストを行うことでCNN_text.Resultsを更新していく．全エポックが終了する前に打ち切った場合は，そこまでの結果がCNN_text.Resultsに保存されている．
+#### predict(texts)
+上記のtextsを引数にとり，各ユーザに対する推定ラベルと推定所属確率を返す．
+戻り値1 : (ユーザ数)次元のnumpy配列．
+戻り値2 : (ユーザ数,クラス数)のshapeを持ったnumpyの2次元配列．
 ### 結果の保存
 #### 誤差，正解率，コンフュージョンマトリクス
 CNN_text.Resultsに，訓練データを用いて学習したモデルをテストデータに用いた場合の結果をエポックごとに記録している．形式はpandas.DataFrame．
