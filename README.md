@@ -40,4 +40,4 @@ n_epochs : エポック数
 #### 誤差，正解率，コンフュージョンマトリクス
 CNN_text.Resultsに，訓練データを用いて学習したモデルをテストデータに用いた場合の結果をエポックごとに記録している．形式はpandas.DataFrame．
 #### 最も性能の良いモデル
-'model/Best_model.ckpt'に，最も誤差の小さかったモデルの情報が保存されている．saver.restore(sess,'model/Best_model.ckpt')で復元可能．※サンプルコード参照
+'model/Best_model.ckpt'に，最も誤差の小さかったモデルの情報が保存されている．saver.restore(sess,'model/Best_model.ckpt')で復元可能．※サンプルコード(Restore_Sample)参照
