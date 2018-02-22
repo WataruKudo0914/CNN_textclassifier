@@ -37,7 +37,6 @@ class CNN(object):
         self.maxlen = 0
         self.n_classes = 0
         self.cnn = None
-        self.Best_sess = None
         
         
     def _tokenize(self,text): #形態素解析
@@ -247,16 +246,29 @@ class CNN(object):
             Results.loc[epoch,'confusion_matrix'] = confusion_matrix
             if loss <= current_loss:
                 current_loss = loss
-                self.Best_sess = sess
                 saver.save(sess,"model/Best_model.ckpt")
                 # 最もlossが小さかったモデルはファイルに保存されている．
         
         return None
     
     def predict(self,texts):
-        text2matrix, mat2data, maxlen, n_classes, model = self.text2matrix, self.mat2data, self.maxlen, self.n_classes, self.model
-        cnn = self.cnn
-        sess = self.Best_sess
+        text2matrix, mat2data, model = self.text2matrix, self.mat2data, self.model
+        
+        with open('model/arg_dic.pickle','rb') as f:
+            arg_dic = pickle.load(f)
+        maxlen, n_classes = arg_dic['sequence_length'], arg_dic['num_classes']
+        
+        
+        if self.cnn is None:
+            cnn = TextCNN(**arg_dic)
+            self.cnn = cnn
+        else:
+            cnn = self.cnn
+            
+        
+        saver = tf.train.Saver()
+        Best_sess = tf.InteractiveSession()
+        saver.restore(Best_sess, "model/Best_model.ckpt")
         
         
         #文章ごとの行列を格納した配列
@@ -270,7 +282,7 @@ class CNN(object):
             cnn.dropout_keep_prob: 1.0,
             }
         
-        predictions, probabilities = sess.run(
+        predictions, probabilities = Best_sess.run(
                 [cnn.predictions, tf.nn.softmax(cnn.scores)],
                 feed_dict) 
         
